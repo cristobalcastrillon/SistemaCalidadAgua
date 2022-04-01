@@ -8,9 +8,9 @@ import java.util.Random;
 
 public class Sensor {
 
-    ConfigFile archivoConfig;
-    TipoSensor tipoSensor;
-    Integer temporizador;
+    private ConfigFile archivoConfig;
+    private TipoSensor tipoSensor;
+    private Integer temporizador;
 
     public Sensor(TipoSensor tipoSensor, Integer temporizador, String configFilePath) {
         // configFilePath: ruta del archivo de configuración en el sistema de archivos de la máquina.
@@ -39,18 +39,27 @@ public class Sensor {
     public void connectToPubSub(){
         try (ZContext context = new ZContext()) {
             ZMQ.Socket publisher = context.createSocket(SocketType.PUB);
-            publisher.bind("tcp://*:5556");
+            publisher.bind("tcp://localhost:5556");
 
             Random srandom = new Random(System.currentTimeMillis());
+
+            // OJO: Valores quemados
+            String tipoMedicion = "PH";
+
+            // La siguiente condición es la correcta. Sin embargo, utilizamos un límite de 100 datos generados para PRUEBAS.
             while (!Thread.currentThread().isInterrupted()) {
                 // 'medicion': variable genérica y temporal (en el proyecto) para pruebas (primera entrega)
-                int medicion;
-                medicion = 10000 + srandom.nextInt(10000);
+                int medicion = 10000 + srandom.nextInt(10000);
+
+                //  Formateando mensaje para enviar a los suscriptores (monitores)...
+                String update = String.format(
+                        "%s %d", tipoMedicion, medicion
+                );
+
+                // Siguiente línea: DEBUGGING
+                System.out.println(medicion);
 
                 //  Enviando mensaje a los suscriptores (monitores)...
-                String update = String.format(
-                        "%d", medicion
-                );
                 publisher.send(update, 0);
             }
         }
