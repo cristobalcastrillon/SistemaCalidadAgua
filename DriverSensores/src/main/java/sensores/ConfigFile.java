@@ -1,5 +1,6 @@
 package sensores;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -71,7 +72,7 @@ public class ConfigFile {
         values.add(fuera.toString());
         values.add(erroneo.toString());
 
-        String configFilePath = System.getProperty("usr.dir") + "/configFile.csv";
+        String configFilePath = System.getProperty("user.dir") + File.separator + "configFile.csv";
         FileWriter csvWriter = new FileWriter(configFilePath);
         csvWriter.append(stringLineConcatHelper(headerFields));
         csvWriter.append(stringLineConcatHelper(values));
