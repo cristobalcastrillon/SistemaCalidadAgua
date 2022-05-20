@@ -14,7 +14,8 @@ public class Sensor {
 
     public Sensor(TipoSensor tipoSensor, Integer temporizador, String configFilePath) {
         // configFilePath: ruta del archivo de configuración en el sistema de archivos de la máquina.
-        this.archivoConfig = createConfigFile(configFilePath);
+        // Puede ser 'null'.
+        this.archivoConfig = configFileEvaluateConditional(configFilePath);
 
         // ¿Qué unidad de medida utilizamos para el temporizador? ¿segundos, milisegundos,...?
         this.temporizador = temporizador;
@@ -26,15 +27,19 @@ public class Sensor {
         connectToPubSub();
     }
 
-    public ConfigFile createConfigFile(String configFilePath){
-
-        // TODO: Abrir archivo, leer archivo y extraer los valores correspondientes a las siguientes variables.
-        Double p_valorDentroDeRango = 0.0;
-        Double p_valorFueraDeRango = 0.0;
-        Double p_valorErroneo = 0.0;
-
-        return new ConfigFile(p_valorDentroDeRango, p_valorFueraDeRango, p_valorErroneo);
-    };
+    /**
+     * @param configFilePath : String de la ruta (¿absoluta o relativa?) del archivo de configuración
+     *                            (archivo csv, con los valores correspondientes a las probabilidades
+     *                            de que un valor estédentro o fuera del rango aceptado; o sea erróneo).
+     *                       Si el configFilePath es nula, se crea un archivo de configuración con valores aleatorios.
+     * @return ConfigFile : Objeto que contiene las probabilidades mencionadas.
+     */
+    public ConfigFile configFileEvaluateConditional(String configFilePath){
+        if(!configFilePath.isEmpty())
+            return new ConfigFile(configFilePath);
+        else
+            return new ConfigFile();
+    }
 
     public void connectToPubSub(){
         try (ZContext context = new ZContext()) {
