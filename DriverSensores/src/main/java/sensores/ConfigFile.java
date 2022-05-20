@@ -1,8 +1,6 @@
 package sensores;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -29,11 +27,18 @@ public class ConfigFile {
     private void extractConfigFromFile(String ruta){
         try {
 
-            // TODO: Read values from configFile
+            BufferedReader csvReader = new BufferedReader(new FileReader(ruta));
 
-            this.p_valorDentroDeRango = p_valorDentroDeRango;
-            this.p_valorFueraDeRango = p_valorFueraDeRango;
-            this.p_valorErroneo = p_valorErroneo;
+            String row;
+            while ((row = csvReader.readLine()) != null) {}
+            String[] data = row.split(",");
+
+            // OJO: Se presupone que el formato siempre es idéntico (línea 1: header; línea 2: dentro, fuera, erróneo.)
+            this.p_valorDentroDeRango = Double.parseDouble(data[0]);
+            this.p_valorFueraDeRango = Double.parseDouble(data[1]);
+            this.p_valorErroneo = Double.parseDouble(data[2]);
+
+            csvReader.close();
         }
         catch(IOException e){
             e.toString();
