@@ -1,5 +1,11 @@
 public enum TipoMedicion {
-    PH,
-    OXIGENO,
-    TEMPERATURA
+    PH("pH"),
+    OXIGENO("Oxigeno"),
+    TEMPERATURA("Temperatura");
+
+    public final String tipo;
+
+    private TipoMedicion(String tipo){
+        this.tipo = tipo;
+    }
 }

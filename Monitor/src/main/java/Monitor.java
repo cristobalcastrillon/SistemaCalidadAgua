@@ -2,7 +2,6 @@ import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZContext;
 
-import java.nio.charset.StandardCharsets;
 import java.util.StringTokenizer;
 
 public class Monitor {
@@ -14,20 +13,19 @@ public class Monitor {
     }
 
     // TODO: Desarrollar método generarAlarma().
-    private void generarAlarma(){}
+    private void generateAlarm(){}
 
     // TODO: Desarrollar método verificarUltimoValor().
-    private void verificarUltimoValor(){}
+    private void verifyLatestInput(){}
 
-    // Cada Monitor es un proceso corriendo sobre el SO, por ende, debe tener un punto de entrada (función main).
-    public static void main(String[] args){
+    private static void zmqSubscribe(TipoMedicion tipoMedicion){
         try (ZContext context = new ZContext()) {
             // Conexión al servidor
             System.out.println("Recibiendo datos de sensores...");
+
             ZMQ.Socket subscriber = context.createSocket(SocketType.SUB);
             subscriber.connect("tcp://localhost:5556");
-
-            subscriber.subscribe("PH".getBytes(ZMQ.CHARSET));
+            subscriber.subscribe((tipoMedicion.tipo).getBytes(ZMQ.CHARSET));
 
             // TEST: Se imprimen los primeros 100 valores de la medición
             for(int i = 0; i < 100; i++){
@@ -42,6 +40,11 @@ public class Monitor {
                 );
             }
         }
+    }
+
+    // Cada Monitor es un proceso corriendo sobre el SO, por ende, debe tener un punto de entrada (función main).
+    public static void main(String[] args){
+        zmqSubscribe();
     }
 
 }

@@ -5,23 +5,26 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
 import java.util.Random;
+import java.util.UUID;
 
 public class Sensor {
 
+    private final UUID idSensor = UUID.randomUUID();
+    private final TipoSensor tipoSensor;
     private ConfigFile archivoConfig;
-    private TipoSensor tipoSensor;
     private Integer temporizador;
 
     public Sensor(TipoSensor tipoSensor, Integer temporizador, String configFilePath) {
-        // configFilePath: ruta del archivo de configuración en el sistema de archivos de la máquina.
-        // Puede ser 'null'.
-        this.archivoConfig = configFileEvaluateConditional(configFilePath);
 
-        // ¿Qué unidad de medida utilizamos para el temporizador? ¿segundos, milisegundos,...?
+        // TODO: ¿Qué unidad de medida utilizamos para el temporizador? ¿segundos, milisegundos,...?
         this.temporizador = temporizador;
 
         // ¿En qué formato recibimos el tipo de medición / sensor?
         this.tipoSensor = tipoSensor;
+
+        // configFilePath: ruta del archivo de configuración en el sistema de archivos de la máquina.
+        // Puede ser 'null'.
+        this.archivoConfig = configFileEvaluateConditional(configFilePath, idSensor, tipoSensor.tipo);
 
         // TODO: Desarrollar correctamente método connectToPubSub().
         connectToPubSub();
@@ -32,13 +35,15 @@ public class Sensor {
      *                            (archivo csv, con los valores correspondientes a las probabilidades
      *                            de que un valor estédentro o fuera del rango aceptado; o sea erróneo).
      *                       Si el configFilePath es nula, se crea un archivo de configuración con valores aleatorios.
+     * @param idSensor : ID del sensor.
+     * @param tipoSensor : ID del sensor.
      * @return ConfigFile : Objeto que contiene las probabilidades mencionadas.
      */
-    public ConfigFile configFileEvaluateConditional(String configFilePath){
+    public ConfigFile configFileEvaluateConditional(String configFilePath, UUID idSensor, String tipoSensor){
         if(!configFilePath.isEmpty())
             return new ConfigFile(configFilePath);
         else
-            return new ConfigFile();
+            return new ConfigFile(idSensor, tipoSensor);
     }
 
     public void connectToPubSub(){

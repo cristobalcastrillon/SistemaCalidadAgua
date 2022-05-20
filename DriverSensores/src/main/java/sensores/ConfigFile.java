@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 public class ConfigFile {
 
@@ -19,8 +20,8 @@ public class ConfigFile {
         extractConfigFromFile(ruta_archivo);
     }
 
-    public ConfigFile(){
-        generateConfigFile();
+    public ConfigFile(UUID idSensor, String tipoSensor){
+        generateConfigFile(idSensor.toString(), tipoSensor);
     }
 
     // Método para extraer los valores de las probabilidades desde un archivo alojado con la referencia que se ha pasado.
@@ -47,7 +48,7 @@ public class ConfigFile {
 
     // Método para generar archivos de configuración cuando no se pasa referencia a alguno de ellos
     // (configFilePath.isEmpty() == true).
-    private void generateConfigFile(){
+    private void generateConfigFile(String idSensor, String tipoSensor){
 
         Random rd = new Random();
 
@@ -56,7 +57,7 @@ public class ConfigFile {
         this.p_valorErroneo = rd.nextDouble();
 
         try{
-            this.ruta_archivo = writeConfigFile(this.p_valorDentroDeRango, this.p_valorFueraDeRango, this.p_valorErroneo);
+            this.ruta_archivo = writeConfigFile(this.p_valorDentroDeRango, this.p_valorFueraDeRango, this.p_valorErroneo, idSensor, tipoSensor);
         }
         catch(IOException e){
             e.toString();
@@ -65,7 +66,7 @@ public class ConfigFile {
 
     // Método para escribir los valores de probabilidad generados de manera aleatoria en un archivo.
     // Este método retorna una ruta para el archivo generado.
-    private String writeConfigFile(Double dentro, Double fuera, Double erroneo) throws IOException {
+    private String writeConfigFile(Double dentro, Double fuera, Double erroneo, String idSensor, String tipoSensor) throws IOException {
 
         ArrayList<String> headerFields = new ArrayList<>();
         headerFields.add("p_valorDentroDeRango");
@@ -77,7 +78,8 @@ public class ConfigFile {
         values.add(fuera.toString());
         values.add(erroneo.toString());
 
-        String configFilePath = System.getProperty("user.dir") + File.separator + "configFile.csv";
+        String configFilePath = System.getProperty("user.dir") + File.separator +
+                tipoSensor + "_" + idSensor + "_" + "configFile.csv";
         FileWriter csvWriter = new FileWriter(configFilePath);
         csvWriter.append(stringLineConcatHelper(headerFields));
         csvWriter.append(stringLineConcatHelper(values));

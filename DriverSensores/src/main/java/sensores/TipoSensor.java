@@ -1,7 +1,13 @@
 package sensores;
 
 public enum TipoSensor {
-    PH,
-    OXIGENO,
-    TEMPERATURA
+    PH("pH"),
+    OXIGENO("Oxigeno"),
+    TEMPERATURA("Temperatura");
+
+    public final String tipo;
+
+    private TipoSensor(String tipo){
+        this.tipo = tipo;
+    }
 }
