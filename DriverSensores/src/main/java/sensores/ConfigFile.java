@@ -15,6 +15,9 @@ public class ConfigFile {
     private Double p_valorFueraDeRango;
     private Double p_valorErroneo;
 
+    // TODO: Inicializar el siguiente rango.
+    private Double[] rangoAceptable;
+
     public ConfigFile(String ruta_archivo){
         this.ruta_archivo = ruta_archivo;
         extractConfigFromFile(ruta_archivo);
@@ -27,7 +30,6 @@ public class ConfigFile {
     // Método para extraer los valores de las probabilidades desde un archivo alojado con la referencia que se ha pasado.
     private void extractConfigFromFile(String ruta){
         try {
-
             BufferedReader csvReader = new BufferedReader(new FileReader(ruta));
 
             String row;
@@ -52,9 +54,12 @@ public class ConfigFile {
 
         Random rd = new Random();
 
+        // Asegurando que la sumatoria de las probabilides sea igual a 1.
         this.p_valorDentroDeRango = rd.nextDouble();
-        this.p_valorFueraDeRango = rd.nextDouble();
-        this.p_valorErroneo = rd.nextDouble();
+        do{
+            p_valorFueraDeRango = rd.nextDouble();
+        } while(( p_valorDentroDeRango + p_valorFueraDeRango) > 1d);
+        this.p_valorErroneo = 1d - p_valorFueraDeRango - p_valorDentroDeRango;
 
         try{
             this.ruta_archivo = writeConfigFile(this.p_valorDentroDeRango, this.p_valorFueraDeRango, this.p_valorErroneo, idSensor, tipoSensor);
@@ -102,5 +107,25 @@ public class ConfigFile {
         }
         toBeAppended += '\n';
         return toBeAppended;
+    }
+
+    public String getRuta_archivo() {
+        return ruta_archivo;
+    }
+
+    public Double getP_valorDentroDeRango() {
+        return p_valorDentroDeRango;
+    }
+
+    public Double getP_valorFueraDeRango() {
+        return p_valorFueraDeRango;
+    }
+
+    public Double getP_valorErroneo() {
+        return p_valorErroneo;
+    }
+
+    public Double[] getRangoAceptable() {
+        return rangoAceptable;
     }
 }

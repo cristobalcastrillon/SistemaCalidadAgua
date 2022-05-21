@@ -6,7 +6,7 @@ import java.util.StringTokenizer;
 
 public class Monitor {
     private double[] receivedData = {};
-    private TipoMedicion tipoMedicion;
+    private static TipoMedicion tipoMedicion;
 
     public Monitor(TipoMedicion tipoMedicion){
         this.tipoMedicion = tipoMedicion;
@@ -18,25 +18,30 @@ public class Monitor {
     // TODO: Desarrollar método verificarUltimoValor().
     private void verifyLatestInput(){}
 
-    private static void zmqSubscribe(TipoMedicion tipoMedicion){
+    /**
+     * @param address : dirección en formato "tcp://hostname:port".
+     * @param tipoMedicion : String del tipo de medición al que se subscribirá el monitor.
+     */
+    private static void zmqSubscribe(String address, String tipoMedicion){
         try (ZContext context = new ZContext()) {
             // Conexión al servidor
             System.out.println("Recibiendo datos de sensores...");
 
             ZMQ.Socket subscriber = context.createSocket(SocketType.SUB);
-            subscriber.connect("tcp://localhost:5556");
-            subscriber.subscribe((tipoMedicion.tipo).getBytes(ZMQ.CHARSET));
+            subscriber.connect(address);
+            subscriber.subscribe(tipoMedicion.getBytes(ZMQ.CHARSET));
 
+            // TODO: Replace following chunk of code with business logic.
             // TEST: Se imprimen los primeros 100 valores de la medición
             for(int i = 0; i < 100; i++){
                 String string = subscriber.recvStr(0).trim();
 
                 StringTokenizer sscanf = new StringTokenizer(string, "  ");
-                String tipoMedicion = sscanf.nextToken();
+                String tipo = sscanf.nextToken();
                 int medicion = Integer.valueOf(sscanf.nextToken());
 
                 System.out.println(
-                        String.format("%s   %d", tipoMedicion, medicion)
+                        String.format("%s   %d", tipo, medicion)
                 );
             }
         }
@@ -44,7 +49,7 @@ public class Monitor {
 
     // Cada Monitor es un proceso corriendo sobre el SO, por ende, debe tener un punto de entrada (función main).
     public static void main(String[] args){
-        zmqSubscribe();
+        zmqSubscribe("tcp://localhost:5556", tipoMedicion.tipo);
     }
 
 }
