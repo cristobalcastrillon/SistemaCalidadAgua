@@ -36,12 +36,15 @@ public class Monitor {
             for(int i = 0; i < 100; i++){
                 String string = subscriber.recvStr(0).trim();
 
-                StringTokenizer sscanf = new StringTokenizer(string, "  ");
+                StringTokenizer sscanf = new StringTokenizer(string, " ");
                 String tipo = sscanf.nextToken();
-                int medicion = Integer.valueOf(sscanf.nextToken());
+                String idSensor = sscanf.nextToken();
+                // TODO: Castear medición (String) a Double para evaluar
+                //  y generar alarma al Sistema de Calidad si es del caso.
+                String medicion = sscanf.nextToken();
 
                 System.out.println(
-                        String.format("%s   %d", tipo, medicion)
+                        String.format("%s %s %s", tipo, idSensor, medicion)
                 );
             }
         }
@@ -49,7 +52,7 @@ public class Monitor {
 
     // Cada Monitor es un proceso corriendo sobre el SO, por ende, debe tener un punto de entrada (función main).
     public static void main(String[] args){
-        zmqSubscribe("tcp://localhost:5556", tipoMedicion.tipo);
+        zmqSubscribe("tcp://localhost:5556", tipoMedicion.PH.tipo);
     }
 
 }

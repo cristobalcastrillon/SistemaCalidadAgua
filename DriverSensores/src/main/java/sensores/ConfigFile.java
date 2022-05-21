@@ -60,7 +60,7 @@ public class ConfigFile {
 
         Random rd = new Random();
 
-        // Asegurando que la sumatoria de las probabilides sea igual a 1.
+        // Asegurando que la sumatoria de las probabilidades sea igual a 1.
         setP_valorDentroDeRango(rd.nextDouble());
         do{
             setP_valorFueraDeRango(rd.nextDouble());
