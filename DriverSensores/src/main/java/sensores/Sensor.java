@@ -1,6 +1,7 @@
 package sensores;
 
 import com.sun.tools.javac.util.Pair;
+import driver.DriverSensores;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
@@ -37,9 +38,8 @@ public class Sensor extends Thread {
 
     @Override
     public void run(){
-        // TODO: Desarrollar correctamente el siguiente método.
         try{
-            ZMQ.Socket publisher = pub_connectZMQ("tcp://localhost:5556");
+            ZMQ.Socket publisher = pub_connectZMQ("tcp://localhost:" + DriverSensores.port.toString());
             generateAndSendReading(publisher, this.temporizador);
         }
         catch(ZMQException e){
