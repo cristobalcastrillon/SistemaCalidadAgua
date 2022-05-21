@@ -35,8 +35,10 @@ public class ConfigFile {
             BufferedReader csvReader = new BufferedReader(new FileReader(ruta));
 
             String row;
-            while ((row = csvReader.readLine()) != null) {}
-            String[] data = row.split(",");
+            String[] data = null;
+            while ((row = csvReader.readLine()) != null) {
+                data = row.split(",");
+            }
 
             // OJO: Se presupone que el formato siempre es idéntico
             // (línea 1: header; línea 2: dentro, fuera, erróneo, límite inferior del rango, límite superior del rango)
@@ -64,6 +66,7 @@ public class ConfigFile {
             setP_valorFueraDeRango(rd.nextDouble());
         } while(( p_valorDentroDeRango + p_valorFueraDeRango) > 1d);
         setP_valorErroneo(1d - p_valorFueraDeRango - p_valorDentroDeRango);
+        setRangoAceptable(generateAdmissibleRange());
 
         try{
             setRuta_archivo(writeConfigFile(getP_valorDentroDeRango(), getP_valorFueraDeRango(), getP_valorErroneo(), getRangoAceptable(), idSensor, tipoSensor));
@@ -71,6 +74,16 @@ public class ConfigFile {
         catch(IOException e){
             e.toString();
         }
+    }
+
+    private Double[] generateAdmissibleRange() {
+        Double[] admissibleRange = {0d, 0d};
+        Random rd = new Random();
+        do{
+            admissibleRange[0] = rd.nextDouble();
+            admissibleRange[1] = rd.nextDouble();
+        }while(admissibleRange[0] >= admissibleRange[1]);
+        return admissibleRange;
     }
 
     // Método para escribir los valores de probabilidad generados de manera aleatoria en un archivo.
