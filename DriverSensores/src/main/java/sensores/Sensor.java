@@ -21,7 +21,7 @@ public class Sensor extends Thread {
 
     public Sensor(TipoSensor tipoSensor, Integer temporizador, String configFilePath) {
 
-        // Temporizador en milisegundos.
+        // Unidades del temporizador en milisegundos.
         this.temporizador = temporizador;
 
         // TODO: ¿En qué formato recibimos el tipo de medición / sensor?
@@ -29,7 +29,7 @@ public class Sensor extends Thread {
 
         // configFilePath: ruta del archivo de configuración en el sistema de archivos de la máquina.
         // Puede ser 'null'.
-        this.archivoConfig = configFileEvaluateConditional(configFilePath, idSensor, tipoSensor.tipo);
+        this.archivoConfig = configFileEvaluateConditional(configFilePath, this.idSensor, tipoSensor.tipo);
 
         // Iniciando la ejecución del hilo...
         this.start();
@@ -40,7 +40,7 @@ public class Sensor extends Thread {
         // TODO: Desarrollar correctamente el siguiente método.
         try{
             ZMQ.Socket publisher = pub_connectZMQ("tcp://localhost:5556");
-            generateAndSendReading(publisher, temporizador);
+            generateAndSendReading(publisher, this.temporizador);
         }
         catch(ZMQException e){
             e.getMessage();
@@ -50,11 +50,11 @@ public class Sensor extends Thread {
     /**
      * @param configFilePath : String de la ruta (¿absoluta o relativa?) del archivo de configuración
      *                            (archivo csv, con los valores correspondientes a las probabilidades
-     *                            de que un valor estédentro o fuera del rango aceptado; o sea erróneo).
+     *                            de que un valor esté dentro o fuera del rango aceptado; o sea erróneo).
      *                       Si el configFilePath es nula, se crea un archivo de configuración con valores aleatorios.
      * @param idSensor : ID del sensor.
      * @param tipoSensor : ID del sensor.
-     * @return ConfigFile : Objeto que contiene las probabilidades mencionadas.
+     * @return ConfigFile: Objeto que contiene las probabilidades mencionadas.
      */
     public ConfigFile configFileEvaluateConditional(String configFilePath, UUID idSensor, String tipoSensor){
         if(!configFilePath.isEmpty())
@@ -86,7 +86,7 @@ public class Sensor extends Thread {
                 readingData = generatedPair.fst;
                 generatedProbabilityFreqArray[generatedPair.snd]--;
                 String readingDataFormatted = String.format(
-                        "%s %s %f", tipoSensor.tipo, idSensor.toString(), readingData
+                        "%s %s %f", tipoSensor.tipo, idSensor, readingData
                 );
                 publisher.send(readingDataFormatted, 0);
             }
