@@ -13,10 +13,12 @@ public class Monitor {
     }
 
     // TODO: Desarrollar método generarAlarma().
-    private void generateAlarm(){}
+    // Título final : generateAlarm()
+    private void generarAlarm(){}
 
     // TODO: Desarrollar método verificarUltimoValor().
-    private void verifyLatestInput(){}
+    // Título final : verifyLatestInput()
+    private void verificarUltimoValor(){}
 
     /**
      * @param address : dirección en formato "tcp://hostname:port".
@@ -52,6 +54,7 @@ public class Monitor {
 
     // Cada Monitor es un proceso corriendo sobre el SO, por ende, debe tener un punto de entrada (función main).
     public static void main(String[] args){
+        // TODO: Find out how to subscribe to the same 'tipoMedicion' on different ports
         zmqSubscribe("tcp://localhost:5556", tipoMedicion.PH.tipo);
     }
 

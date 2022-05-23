@@ -25,7 +25,6 @@ public class Sensor extends Thread {
         // Unidades del temporizador en milisegundos.
         this.temporizador = temporizador;
 
-        // TODO: ¿En qué formato recibimos el tipo de medición / sensor?
         this.tipoSensor = tipoSensor;
 
         // configFilePath: ruta del archivo de configuración en el sistema de archivos de la máquina.
@@ -39,7 +38,8 @@ public class Sensor extends Thread {
     @Override
     public void run(){
         try{
-            ZMQ.Socket publisher = pub_connectZMQ("tcp://localhost:" + DriverSensores.port.toString());
+            // El número de puerto a utilizar es estático y constante (final)
+            ZMQ.Socket publisher = pub_connectZMQ("tcp://localhost:" + DriverSensores.port);
             generateAndSendReading(publisher, this.temporizador);
         }
         catch(ZMQException e){
