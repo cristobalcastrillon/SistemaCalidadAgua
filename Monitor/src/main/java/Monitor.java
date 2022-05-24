@@ -33,7 +33,7 @@ public class Monitor {
             subscriber.connect(address);
             subscriber.subscribe(tipoMedicion.getBytes(ZMQ.CHARSET));
 
-            while(true){
+            while(!Thread.currentThread().isInterrupted()){
                 String string = subscriber.recvStr(0).trim();
 
                 StringTokenizer sscanf = new StringTokenizer(string, " ");
@@ -48,6 +48,9 @@ public class Monitor {
                         String.format("%s %s %s", tipo, idSensor, medicion)
                 );
             }
+            // TODO: Find out if this is the correct usage of the following methods.
+            subscriber.close();
+            context.destroy();
         }
     }
 

@@ -38,9 +38,14 @@ public class Sensor extends Thread {
     @Override
     public void run(){
         try{
+            ZContext context = new ZContext();
             // El número de puerto a utilizar es estático y constante (final)
-            ZMQ.Socket publisher = pub_connectZMQ("tcp://localhost:" + DriverSensores.port);
+            ZMQ.Socket publisher = pub_connectZMQ(context, "tcp://localhost:" + DriverSensores.port);
             generateAndSendReading(publisher, this.temporizador);
+
+            // TODO: Find out if this is the correct usage of the following methods.
+            publisher.close();
+            context.destroy();
         }
         catch(ZMQException e){
             e.getMessage();
@@ -70,8 +75,7 @@ public class Sensor extends Thread {
      * y comunicación de datos.
      * @param address : dirección en formato "tcp://hostname:port" a la que se va a hacer el binding.
      */
-    public ZMQ.Socket pub_connectZMQ(String address) throws ZMQException {
-        ZContext context = new ZContext();
+    public ZMQ.Socket pub_connectZMQ(ZContext context, String address) throws ZMQException {
         ZMQ.Socket publisher = context.createSocket(SocketType.PUB);
         publisher.connect(address);
         return publisher;

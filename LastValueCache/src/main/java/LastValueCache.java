@@ -43,7 +43,7 @@ public class LastValueCache {
                         break;
 
                     cache.add(publishedData);
-                    backend.send(publishedData);
+                    backend.send(publishedData.getBytes());
                 }
                 //  .split handle subscriptions
                 //  When we get a new subscription, we pull data from the cache:
@@ -54,6 +54,10 @@ public class LastValueCache {
                     backend.send(cachedData);
                 }
             }
+            // TODO: Find out if this is the correct usage of the following methods.
+            frontend.close();
+            backend.close();
+            context.destroy();
         }
     }
 }
