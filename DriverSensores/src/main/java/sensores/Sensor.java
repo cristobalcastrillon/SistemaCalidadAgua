@@ -57,10 +57,12 @@ public class Sensor extends Thread {
      * @return ConfigFile: Objeto que contiene las probabilidades mencionadas.
      */
     public ConfigFile configFileEvaluateConditional(String configFilePath, UUID idSensor, String tipoSensor){
-        if(!configFilePath.isEmpty())
+        if(!configFilePath.isEmpty()){
             return new ConfigFile(configFilePath);
-        else
+        }
+        else {
             return new ConfigFile(idSensor, tipoSensor);
+        }
     }
 
     /***
@@ -78,20 +80,38 @@ public class Sensor extends Thread {
     public void generateAndSendReading(ZMQ.Socket publisher, Integer temporizador){
 
         Double readingData;
-        Double[] generatedProbabilityFreqArray = generateProbabilityFreqArray();
+        Integer[] generatedProbabilityFreqArray = generateProbabilityFreqArray();
+
         while(!Thread.currentThread().isInterrupted()){
             try{
                 sleep(temporizador);
-                Pair<Double, Integer> generatedPair = generateReading(generatedProbabilityFreqArray);
+                Pair<Double, Integer> generatedPair = null;
+                Integer typeOfReadingIndex = null;
+                try{
+                    do{
+                        generatedPair = generateReading();
+                    } while(generatedProbabilityFreqArray[generatedPair.snd] <= 0);
+                    typeOfReadingIndex = generatedPair.snd;
+                    generatedProbabilityFreqArray[typeOfReadingIndex]--;
+                    if(generatedProbabilityFreqArray[0] <= 0 && generatedProbabilityFreqArray[1] <= 0 && generatedProbabilityFreqArray[2] <= 0){
+                        throw new ProbabilityFreqArrayCountDownFinished();
+                    }
+                }
+                catch(ProbabilityFreqArrayCountDownFinished finished){
+                    System.out.println("Countdown finished. Generating a new array...");
+                    generatedProbabilityFreqArray = generateProbabilityFreqArray();
+                }
+
                 readingData = generatedPair.fst;
-                generatedProbabilityFreqArray[generatedPair.snd]--;
+
+                //TODO: Comment the following DEBUG lines
+                System.out.println(readingData);
+                System.out.println(typeOfReadingIndex);
+
                 String readingDataFormatted = String.format(
                         "%s %s %f", tipoSensor.tipo, idSensor, readingData
                 );
                 publisher.send(readingDataFormatted, 0);
-            }
-            catch(ProbabilityFreqArrayCountDownFinished finished){
-                generatedProbabilityFreqArray = generateProbabilityFreqArray();
             }
             catch(InterruptedException e){
                 // TODO: Find out if something else should be done in this case.
@@ -100,44 +120,45 @@ public class Sensor extends Thread {
         }
     }
 
-    private Double[] generateProbabilityFreqArray(){
+    private Integer[] generateProbabilityFreqArray(){
         // Posición:
         // 0: Valores erróneos
         // 1: Valores fuera de rango
         // 2: Valores dentro de rango
-        Double[] resultingArray = {0d,0d,0d};
-        resultingArray[0] = 10d * Math.round(archivoConfig.getP_valorErroneo());
-        resultingArray[1] = 10d * Math.round(archivoConfig.getP_valorFueraDeRango());
-        resultingArray[2] = 10d * Math.round(archivoConfig.getP_valorDentroDeRango());
+        Integer[] resultingArray = {0,0,0};
+        resultingArray[0] = Math.toIntExact(Math.round(10 * this.archivoConfig.getP_valorErroneo()));
+        resultingArray[1] = Math.toIntExact(Math.round(10 * this.archivoConfig.getP_valorFueraDeRango()));
+        resultingArray[2] = Math.toIntExact(Math.round(10 * this.archivoConfig.getP_valorDentroDeRango()));
+
+        //TODO: Comment the following DEBUG lines.
+        System.out.println("Erróneos " + resultingArray[0]);
+        System.out.println("Fuera " + resultingArray[1]);
+        System.out.println("Dentro " + resultingArray[2]);
+        System.out.println('\n');
+
         return resultingArray;
     }
 
-    public Pair<Double, Integer> generateReading(Double[] generatedProbabilityFreqArray) throws ProbabilityFreqArrayCountDownFinished {
+    public Pair<Double, Integer> generateReading() {
 
-        Integer indexOfProbabilityCounter;
+        Integer indexOfProbabilityCounter = null;
         Random rd = new Random();
-        Double generatedValue = rd.nextDouble() * Math.pow(-1, rd.nextInt(2));
-        if(generatedValue < 0d && generatedProbabilityFreqArray[0] > 0){
+        Double generatedValue;
+        generatedValue = rd.nextDouble() * Math.pow(-1, rd.nextInt(2));
+
+        if(generatedValue < 0){
             // El valor generado es erróneo.
             indexOfProbabilityCounter = 0;
         }
-        else if((generatedValue < archivoConfig.getRangoAceptable()[0] || generatedValue > archivoConfig.getRangoAceptable()[1])
-                && generatedProbabilityFreqArray[1] > 0){
+        else if(generatedValue < archivoConfig.getRangoAceptable()[0] || generatedValue > archivoConfig.getRangoAceptable()[1]){
             // El valor generado está fuera del rango aceptable.
             indexOfProbabilityCounter = 1;
         }
-        else if((generatedValue > archivoConfig.getRangoAceptable()[0] || generatedValue < archivoConfig.getRangoAceptable()[1])
-                && generatedProbabilityFreqArray[2] > 0){
+        else if(generatedValue >= archivoConfig.getRangoAceptable()[0] || generatedValue <= archivoConfig.getRangoAceptable()[1]){
             // El valor generado está dentro del rango aceptable.
             indexOfProbabilityCounter = 2;
         }
-        else if (generatedProbabilityFreqArray[0] == 0 && generatedProbabilityFreqArray[1] == 0 && generatedProbabilityFreqArray[2] == 0){
-            throw new ProbabilityFreqArrayCountDownFinished();
-        }
-        else {
-            // TODO: Handle null pointer exception
-            indexOfProbabilityCounter = null;
-        }
+
         return Pair.of(generatedValue, indexOfProbabilityCounter);
     }
 }

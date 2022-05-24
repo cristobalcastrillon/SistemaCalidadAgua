@@ -64,8 +64,8 @@ public class ConfigFile {
         setP_valorDentroDeRango(rd.nextDouble());
         do{
             setP_valorFueraDeRango(rd.nextDouble());
-        } while(( p_valorDentroDeRango + p_valorFueraDeRango) > 1d);
-        setP_valorErroneo(1d - p_valorFueraDeRango - p_valorDentroDeRango);
+        } while(( p_valorDentroDeRango + p_valorFueraDeRango) >= 1);
+        setP_valorErroneo(1 - p_valorFueraDeRango - p_valorDentroDeRango);
         setRangoAceptable(generateAdmissibleRange());
 
         try{
@@ -79,10 +79,10 @@ public class ConfigFile {
     private Double[] generateAdmissibleRange() {
         Double[] admissibleRange = {0d, 0d};
         Random rd = new Random();
-        do{
+        while(admissibleRange[0] >= admissibleRange[1]){
             admissibleRange[0] = rd.nextDouble();
             admissibleRange[1] = rd.nextDouble();
-        }while(admissibleRange[0] >= admissibleRange[1]);
+        }
         return admissibleRange;
     }
 
@@ -133,23 +133,23 @@ public class ConfigFile {
     }
 
     public String getRuta_archivo() {
-        return ruta_archivo;
+        return this.ruta_archivo;
     }
 
     public Double getP_valorDentroDeRango() {
-        return p_valorDentroDeRango;
+        return this.p_valorDentroDeRango;
     }
 
     public Double getP_valorFueraDeRango() {
-        return p_valorFueraDeRango;
+        return this.p_valorFueraDeRango;
     }
 
     public Double getP_valorErroneo() {
-        return p_valorErroneo;
+        return this.p_valorErroneo;
     }
 
     public Double[] getRangoAceptable() {
-        return rangoAceptable;
+        return this.rangoAceptable;
     }
 
     public void setRuta_archivo(String ruta_archivo) {
