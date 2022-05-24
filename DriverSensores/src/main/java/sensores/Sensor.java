@@ -71,7 +71,7 @@ public class Sensor extends Thread {
     public ZMQ.Socket pub_connectZMQ(String address) throws ZMQException {
         ZContext context = new ZContext();
         ZMQ.Socket publisher = context.createSocket(SocketType.PUB);
-        publisher.bind(address);
+        publisher.connect(address);
         return publisher;
     }
 

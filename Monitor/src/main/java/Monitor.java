@@ -21,7 +21,7 @@ public class Monitor {
     private void verificarUltimoValor(){}
 
     /**
-     * @param address : dirección en formato "tcp://hostname:port".
+     * @param address : dirección del proxy (last-value cache) en formato "tcp://hostname:port".
      * @param tipoMedicion : String del tipo de medición al que se subscribirá el monitor.
      */
     private static void zmqSubscribe(String address, String tipoMedicion){
@@ -33,14 +33,13 @@ public class Monitor {
             subscriber.connect(address);
             subscriber.subscribe(tipoMedicion.getBytes(ZMQ.CHARSET));
 
-            // TODO: Replace following chunk of code with business logic.
-            // TEST: Se imprimen los primeros 100 valores de la medición
-            for(int i = 0; i < 100; i++){
+            while(true){
                 String string = subscriber.recvStr(0).trim();
 
                 StringTokenizer sscanf = new StringTokenizer(string, " ");
                 String tipo = sscanf.nextToken();
                 String idSensor = sscanf.nextToken();
+
                 // TODO: Castear medición (String) a Double para evaluar
                 //  y generar alarma al Sistema de Calidad si es del caso.
                 String medicion = sscanf.nextToken();
@@ -52,10 +51,14 @@ public class Monitor {
         }
     }
 
-    // Cada Monitor es un proceso corriendo sobre el SO, por ende, debe tener un punto de entrada (función main).
+    /**
+     * @param args: La dirección (host + nro. de puerto) del proxy se pasa como primer argumento al momento de ejecutar el programa.
+     *            Además, el tipo de sensor al que estará suscrito el Monitor se pasa como segundo argumento.
+     *            Si no es así, se toma como dirección por defecto: localhost + puerto 5557;
+     *            y como tipo de medición, pH.
+     */
     public static void main(String[] args){
-        // TODO: Find out how to subscribe to the same 'tipoMedicion' on different ports
-        zmqSubscribe("tcp://localhost:5556", tipoMedicion.PH.tipo);
+        zmqSubscribe("tcp://localhost:5557", tipoMedicion.PH.tipo);
     }
 
 }
