@@ -142,10 +142,6 @@ public class Sensor extends Thread {
         resultingArray[1] = Math.toIntExact(Math.round(10 * this.archivoConfig.getP_valorFueraDeRango()));
         resultingArray[2] = Math.toIntExact(Math.round(10 * this.archivoConfig.getP_valorDentroDeRango()));
 
-        // Si la suma de las probabilidades, debido al error de redondeo, es mayor a 10, se resta una unidad de alguna de ellas,
-        // escogida de manera aleatoria.
-        Integer sum = resultingArray[0] + resultingArray[1] + resultingArray[2];
-
         return resultingArray;
     }
 

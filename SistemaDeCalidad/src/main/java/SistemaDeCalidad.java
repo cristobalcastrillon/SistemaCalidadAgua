@@ -1,8 +1,6 @@
 import org.apache.commons.codec.digest.DigestUtils;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,8 +50,13 @@ public class SistemaDeCalidad {
                 System.out.println("Por favor ingrese una contraseña:");
                 String password = scanner.nextLine();
 
-                userSignUp(id, password);
-                signedIn = userSignIn(id, password);
+                if(!findUserByID(id)){
+                    userSignUp(id, password);
+                    signedIn = userSignIn(id, password);
+                }
+                else{
+                    System.out.println("El id ya está registrado en el sistema.");
+                }
             }
             else{
                 System.out.println("La opción seleccionada no es válida.");
@@ -86,7 +89,6 @@ public class SistemaDeCalidad {
     }
 
     private static void logNewUserInFile(String id, String saltString, String generatedPasswordHash) throws IOException {
-        // TODO(Not implemented yet)
 
         File userDataFile = new File(UserDataFile.pathName);
 
@@ -131,9 +133,44 @@ public class SistemaDeCalidad {
     }
 
     private static String[] readFromFileByUserID(String id) throws IOException {
-        // TODO(Not implemented yet)
-        String[] data = null;
-        return data;
+
+        String[] userData = null;
+        if(findUserByID(id)){
+            BufferedReader csvReader = new BufferedReader(new FileReader(UserDataFile.pathName));
+            String row;
+            String[] data;
+            while ((row = csvReader.readLine()) != null) {
+                data = row.split(",");
+                if(data[UserDataFile.USR_ID_POS].equals(id)){
+                    userData = data;
+                    break;
+                }
+            }
+        }
+        else{
+            throw new UserNotFoundInDataFile("Could not locate a user with the given ID.");
+        }
+        return userData;
+    }
+
+    private static boolean findUserByID(String id) {
+        boolean found = false;
+        try{
+            BufferedReader csvReader = new BufferedReader(new FileReader(UserDataFile.pathName));
+            String row;
+            String[] data;
+            while ((row = csvReader.readLine()) != null) {
+                data = row.split(",");
+                if(data[UserDataFile.USR_ID_POS].equals(id)){
+                    found = true;
+                    break;
+                }
+            }
+        }
+        catch(IOException e){
+            e.getMessage();
+        }
+        return found;
     }
 
     private static String stringLineConcatHelper(List<String> toBeFormatted){
