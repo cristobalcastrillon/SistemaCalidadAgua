@@ -45,7 +45,7 @@ public class Monitor {
                 String medicion = sscanf.nextToken();
 
                 System.out.println(
-                        String.format("%s %s %s", tipo, idSensor, medicion)
+                        tipo + '\t' + idSensor + '\t' + medicion
                 );
             }
             // TODO: Find out if this is the correct usage of the following methods.

@@ -117,9 +117,8 @@ public class Sensor extends Thread {
 
                 readingData = generatedPair.fst;
 
-                //TODO: Comment the following DEBUG lines
-                System.out.println(readingData);
-                System.out.println(typeOfReadingIndex);
+                //TODO: Comment the following DEBUG line
+                System.out.println(this.tipoSensor.toString() + '\t' + this.idSensor + '\t' + readingData);
 
                 String readingDataFormatted = String.format(
                         "%s %s %f", tipoSensor.tipo, this.idSensor, readingData
@@ -146,12 +145,6 @@ public class Sensor extends Thread {
         // Si la suma de las probabilidades, debido al error de redondeo, es mayor a 10, se resta una unidad de alguna de ellas,
         // escogida de manera aleatoria.
         Integer sum = resultingArray[0] + resultingArray[1] + resultingArray[2];
-
-        //TODO: Comment the following DEBUG lines.
-        System.out.println("Erróneos " + resultingArray[0]);
-        System.out.println("Fuera " + resultingArray[1]);
-        System.out.println("Dentro " + resultingArray[2]);
-        System.out.println('\n');
 
         return resultingArray;
     }
