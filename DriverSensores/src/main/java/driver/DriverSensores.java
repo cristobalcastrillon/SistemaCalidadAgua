@@ -1,7 +1,6 @@
 package driver;
 
 import sensores.Sensor;
-import sensores.TipoSensor;
 
 public class DriverSensores {
 
@@ -12,7 +11,5 @@ public class DriverSensores {
         Sensor sensor2 = new Sensor(1000, "");
         Sensor sensor3 = new Sensor(1500, "");
         Sensor sensor4 = new Sensor(3000, "");
-        Sensor sensor5 = new Sensor(1000, "");
-        Sensor sensor6 = new Sensor(1000, "");
     }
 }
