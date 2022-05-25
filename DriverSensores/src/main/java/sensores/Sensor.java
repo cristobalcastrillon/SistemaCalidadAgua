@@ -7,6 +7,7 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 
+import java.io.File;
 import java.util.Random;
 import java.util.UUID;
 
@@ -15,21 +16,19 @@ import java.util.UUID;
  */
 public class Sensor extends Thread {
 
-    private final UUID idSensor = UUID.randomUUID();
-    private final TipoSensor tipoSensor;
+    private String idSensor;
+    private TipoSensor tipoSensor;
     private ConfigFile archivoConfig;
     private Integer temporizador;
 
-    public Sensor(TipoSensor tipoSensor, Integer temporizador, String configFilePath) {
+    public Sensor(Integer temporizador, String configFilePath) {
 
         // Unidades del temporizador en milisegundos.
         this.temporizador = temporizador;
 
-        this.tipoSensor = tipoSensor;
-
         // configFilePath: ruta del archivo de configuración en el sistema de archivos de la máquina.
         // Puede ser 'null'.
-        this.archivoConfig = configFileEvaluateConditional(configFilePath, this.idSensor, tipoSensor.tipo);
+        this.archivoConfig = configFileEvaluateConditional(configFilePath);
 
         // Iniciando la ejecución del hilo...
         this.start();
@@ -57,17 +56,27 @@ public class Sensor extends Thread {
      *                            (archivo csv, con los valores correspondientes a las probabilidades
      *                            de que un valor esté dentro o fuera del rango aceptado; o sea erróneo).
      *                       Si el configFilePath es nula, se crea un archivo de configuración con valores aleatorios.
-     * @param idSensor : ID del sensor.
-     * @param tipoSensor : ID del sensor.
      * @return ConfigFile: Objeto que contiene las probabilidades mencionadas.
      */
-    public ConfigFile configFileEvaluateConditional(String configFilePath, UUID idSensor, String tipoSensor){
+    public ConfigFile configFileEvaluateConditional(String configFilePath){
         if(!configFilePath.isEmpty()){
+            String[] typeAndID_array = extractTypeAndIDFromFilePathName(configFilePath);
+            String[] tipoSensorNotFormatted = typeAndID_array[0].split(File.separator);
+            this.tipoSensor = TipoSensor.retrieveTypeByString(tipoSensorNotFormatted[tipoSensorNotFormatted.length - 1]);
+            this.idSensor = typeAndID_array[1];
             return new ConfigFile(configFilePath);
         }
         else {
-            return new ConfigFile(idSensor, tipoSensor);
+            UUID uuidSensor = UUID.randomUUID();
+            this.idSensor = uuidSensor.toString();
+            Random rd = new Random();
+            this.tipoSensor = TipoSensor.values()[rd.nextInt(3)];
+            return new ConfigFile(uuidSensor, TipoSensor.retrieveStringByType(this.tipoSensor));
         }
+    }
+
+    private String[] extractTypeAndIDFromFilePathName(String configFilePathName) {
+        return configFilePathName.split("_");
     }
 
     /***
@@ -113,7 +122,7 @@ public class Sensor extends Thread {
                 System.out.println(typeOfReadingIndex);
 
                 String readingDataFormatted = String.format(
-                        "%s %s %f", tipoSensor.tipo, idSensor, readingData
+                        "%s %s %f", tipoSensor.tipo, this.idSensor, readingData
                 );
                 publisher.send(readingDataFormatted, 0);
             }
@@ -137,16 +146,6 @@ public class Sensor extends Thread {
         // Si la suma de las probabilidades, debido al error de redondeo, es mayor a 10, se resta una unidad de alguna de ellas,
         // escogida de manera aleatoria.
         Integer sum = resultingArray[0] + resultingArray[1] + resultingArray[2];
-        if(sum != 1){
-            if(sum > 1){
-                Random rd = new Random();
-                Integer randomIndex = rd.nextInt(3);
-                resultingArray[randomIndex] =  resultingArray[randomIndex] - 1;
-            }
-            else{
-                throw new RuntimeException("The probabilities in the configuration file don't add up to 1.");
-            }
-        }
 
         //TODO: Comment the following DEBUG lines.
         System.out.println("Erróneos " + resultingArray[0]);

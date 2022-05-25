@@ -26,7 +26,7 @@ public class ConfigFile {
     }
 
     public ConfigFile(UUID idSensor, String tipoSensor){
-        generateConfigFile(idSensor.toString(), tipoSensor);
+        generateConfigFile(idSensor, tipoSensor);
     }
 
     // Método para extraer los valores de las probabilidades desde un archivo alojado con la referencia que se ha pasado.
@@ -56,7 +56,7 @@ public class ConfigFile {
 
     // Método para generar archivos de configuración cuando no se pasa referencia a alguno de ellos
     // (configFilePath.isEmpty() == true).
-    private void generateConfigFile(String idSensor, String tipoSensor){
+    private void generateConfigFile(UUID idSensor, String tipoSensor){
 
         Random rd = new Random();
 
@@ -69,7 +69,11 @@ public class ConfigFile {
         setRangoAceptable(generateAdmissibleRange());
 
         try{
-            setRuta_archivo(writeConfigFile(getP_valorDentroDeRango(), getP_valorFueraDeRango(), getP_valorErroneo(), getRangoAceptable(), idSensor, tipoSensor));
+            setRuta_archivo(
+                    writeConfigFile(
+                            getP_valorDentroDeRango(), getP_valorFueraDeRango(), getP_valorErroneo(), getRangoAceptable(), idSensor.toString(), tipoSensor
+                    )
+            );
         }
         catch(IOException e){
             e.toString();
