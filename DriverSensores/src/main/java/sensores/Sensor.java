@@ -134,6 +134,20 @@ public class Sensor extends Thread {
         resultingArray[1] = Math.toIntExact(Math.round(10 * this.archivoConfig.getP_valorFueraDeRango()));
         resultingArray[2] = Math.toIntExact(Math.round(10 * this.archivoConfig.getP_valorDentroDeRango()));
 
+        // Si la suma de las probabilidades, debido al error de redondeo, es mayor a 10, se resta una unidad de alguna de ellas,
+        // escogida de manera aleatoria.
+        Integer sum = resultingArray[0] + resultingArray[1] + resultingArray[2];
+        if(sum != 1){
+            if(sum > 1){
+                Random rd = new Random();
+                Integer randomIndex = rd.nextInt(3);
+                resultingArray[randomIndex] =  resultingArray[randomIndex] - 1;
+            }
+            else{
+                throw new RuntimeException("The probabilities in the configuration file don't add up to 1.");
+            }
+        }
+
         //TODO: Comment the following DEBUG lines.
         System.out.println("Erróneos " + resultingArray[0]);
         System.out.println("Fuera " + resultingArray[1]);
