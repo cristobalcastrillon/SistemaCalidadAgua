@@ -1,67 +1,174 @@
 package sensores;
 
+import com.sun.tools.javac.util.Pair;
+import driver.DriverSensores;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
+import org.zeromq.ZMQException;
 
+import java.io.File;
 import java.util.Random;
+import java.util.UUID;
 
-public class Sensor {
+/**
+ * Esta clase Sensor extiende Thread: cada sensor corre en un hilo independiente.
+ */
+public class Sensor extends Thread {
 
-    private ConfigFile archivoConfig;
+    private String idSensor;
     private TipoSensor tipoSensor;
+    private ConfigFile archivoConfig;
     private Integer temporizador;
 
-    public Sensor(TipoSensor tipoSensor, Integer temporizador, String configFilePath) {
-        // configFilePath: ruta del archivo de configuración en el sistema de archivos de la máquina.
-        this.archivoConfig = createConfigFile(configFilePath);
+    public Sensor(Integer temporizador, String configFilePath) {
 
-        // ¿Qué unidad de medida utilizamos para el temporizador? ¿segundos, milisegundos,...?
+        // Unidades del temporizador en milisegundos.
         this.temporizador = temporizador;
 
-        // ¿En qué formato recibimos el tipo de medición / sensor?
-        this.tipoSensor = tipoSensor;
+        // configFilePath: ruta del archivo de configuración en el sistema de archivos de la máquina.
+        // Puede ser 'null'.
+        this.archivoConfig = configFileEvaluateConditional(configFilePath);
 
-        // TODO: Desarrollar correctamente método connectToPubSub().
-        connectToPubSub();
+        // Iniciando la ejecución del hilo...
+        this.start();
     }
 
-    public ConfigFile createConfigFile(String configFilePath){
+    @Override
+    public void run(){
+        try{
+            ZContext context = new ZContext();
+            // El número de puerto a utilizar es estático y constante (final)
+            ZMQ.Socket publisher = pub_connectZMQ(context, "tcp://localhost:" + DriverSensores.port);
+            generateAndSendReading(publisher, this.temporizador);
 
-        // TODO: Abrir archivo, leer archivo y extraer los valores correspondientes a las siguientes variables.
-        Double p_valorDentroDeRango = 0.0;
-        Double p_valorFueraDeRango = 0.0;
-        Double p_valorErroneo = 0.0;
+            // TODO: Find out if this is the correct usage of the following methods.
+            publisher.close();
+            context.destroy();
+        }
+        catch(ZMQException e){
+            e.getMessage();
+        }
+    }
 
-        return new ConfigFile(p_valorDentroDeRango, p_valorFueraDeRango, p_valorErroneo);
-    };
+    /**
+     * @param configFilePath : String de la ruta (¿absoluta o relativa?) del archivo de configuración
+     *                            (archivo csv, con los valores correspondientes a las probabilidades
+     *                            de que un valor esté dentro o fuera del rango aceptado; o sea erróneo).
+     *                       Si el configFilePath es nula, se crea un archivo de configuración con valores aleatorios.
+     * @return ConfigFile: Objeto que contiene las probabilidades mencionadas.
+     */
+    public ConfigFile configFileEvaluateConditional(String configFilePath){
+        if(!configFilePath.isEmpty()){
+            String[] typeAndID_array = extractTypeAndIDFromFilePathName(configFilePath);
+            String[] tipoSensorNotFormatted = typeAndID_array[0].split(File.separator);
+            this.tipoSensor = TipoSensor.retrieveTypeByString(tipoSensorNotFormatted[tipoSensorNotFormatted.length - 1]);
+            this.idSensor = typeAndID_array[1];
+            return new ConfigFile(configFilePath);
+        }
+        else {
+            UUID uuidSensor = UUID.randomUUID();
+            this.idSensor = uuidSensor.toString();
+            Random rd = new Random();
+            this.tipoSensor = TipoSensor.values()[rd.nextInt(3)];
+            return new ConfigFile(uuidSensor, TipoSensor.retrieveStringByType(this.tipoSensor));
+        }
+    }
 
-    public void connectToPubSub(){
-        try (ZContext context = new ZContext()) {
-            ZMQ.Socket publisher = context.createSocket(SocketType.PUB);
-            publisher.bind("tcp://localhost:5556");
+    private String[] extractTypeAndIDFromFilePathName(String configFilePathName) {
+        return configFilePathName.split("_");
+    }
 
-            Random srandom = new Random(System.currentTimeMillis());
+    /***
+     * Método para conectar el sensor al servicio de mensajería ZMQ y posteriormente iniciar la generación
+     * y comunicación de datos.
+     * @param address : dirección en formato "tcp://hostname:port" a la que se va a hacer el binding.
+     */
+    public ZMQ.Socket pub_connectZMQ(ZContext context, String address) throws ZMQException {
+        ZMQ.Socket publisher = context.createSocket(SocketType.PUB);
+        publisher.connect(address);
+        return publisher;
+    }
 
-            // OJO: Valores quemados
-            String tipoMedicion = "PH";
+    public void generateAndSendReading(ZMQ.Socket publisher, Integer temporizador){
 
-            // La siguiente condición es la correcta. Sin embargo, utilizamos un límite de 100 datos generados para PRUEBAS.
-            while (!Thread.currentThread().isInterrupted()) {
-                // 'medicion': variable genérica y temporal (en el proyecto) para pruebas (primera entrega)
-                int medicion = 10000 + srandom.nextInt(10000);
+        Double readingData;
+        Integer[] generatedProbabilityFreqArray = generateProbabilityFreqArray();
 
-                //  Formateando mensaje para enviar a los suscriptores (monitores)...
-                String update = String.format(
-                        "%s %d", tipoMedicion, medicion
+        while(!Thread.currentThread().isInterrupted()){
+            try{
+                sleep(temporizador);
+                Pair<Double, Integer> generatedPair = null;
+                Integer typeOfReadingIndex = null;
+                try{
+                    do{
+                        generatedPair = generateReading();
+                    } while(generatedProbabilityFreqArray[generatedPair.snd] <= 0);
+                    typeOfReadingIndex = generatedPair.snd;
+                    generatedProbabilityFreqArray[typeOfReadingIndex]--;
+                    if(generatedProbabilityFreqArray[0] <= 0 && generatedProbabilityFreqArray[1] <= 0 && generatedProbabilityFreqArray[2] <= 0){
+                        throw new ProbabilityFreqArrayCountDownFinished();
+                    }
+                }
+                catch(ProbabilityFreqArrayCountDownFinished finished){
+                    System.out.println("Countdown finished. Generating a new array...");
+                    generatedProbabilityFreqArray = generateProbabilityFreqArray();
+                }
+
+                readingData = generatedPair.fst;
+
+                //TODO: Comment the following DEBUG line
+                System.out.println(this.tipoSensor.toString() + '\t' + this.idSensor + '\t' + readingData);
+
+                String readingDataFormatted = String.format(
+                        "%s %s %f", tipoSensor.tipo, this.idSensor, readingData
                 );
-
-                // Siguiente línea: DEBUGGING
-                System.out.println(medicion);
-
-                //  Enviando mensaje a los suscriptores (monitores)...
-                publisher.send(update, 0);
+                publisher.send(readingDataFormatted, 0);
+            }
+            catch(InterruptedException e){
+                // TODO: Find out if something else should be done in this case.
+                e.getMessage();
             }
         }
+    }
+
+    private Integer[] generateProbabilityFreqArray(){
+        // Posición:
+        // 0: Valores erróneos
+        // 1: Valores fuera de rango
+        // 2: Valores dentro de rango
+        Integer[] resultingArray = {0,0,0};
+        resultingArray[0] = Math.toIntExact(Math.round(10 * this.archivoConfig.getP_valorErroneo()));
+        resultingArray[1] = Math.toIntExact(Math.round(10 * this.archivoConfig.getP_valorFueraDeRango()));
+        resultingArray[2] = Math.toIntExact(Math.round(10 * this.archivoConfig.getP_valorDentroDeRango()));
+
+        // Si la suma de las probabilidades, debido al error de redondeo, es mayor a 10, se resta una unidad de alguna de ellas,
+        // escogida de manera aleatoria.
+        Integer sum = resultingArray[0] + resultingArray[1] + resultingArray[2];
+
+        return resultingArray;
+    }
+
+    public Pair<Double, Integer> generateReading() {
+
+        Integer indexOfProbabilityCounter = null;
+        Random rd = new Random();
+        Double generatedValue;
+        generatedValue = rd.nextDouble() * Math.pow(-1, rd.nextInt(2));
+
+        if(generatedValue < 0){
+            // El valor generado es erróneo.
+            indexOfProbabilityCounter = 0;
+        }
+        else if(generatedValue < archivoConfig.getRangoAceptable()[0] || generatedValue > archivoConfig.getRangoAceptable()[1]){
+            // El valor generado está fuera del rango aceptable.
+            indexOfProbabilityCounter = 1;
+        }
+        else if(generatedValue >= archivoConfig.getRangoAceptable()[0] || generatedValue <= archivoConfig.getRangoAceptable()[1]){
+            // El valor generado está dentro del rango aceptable.
+            indexOfProbabilityCounter = 2;
+        }
+
+        return Pair.of(generatedValue, indexOfProbabilityCounter);
     }
 }
