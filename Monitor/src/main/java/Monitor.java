@@ -2,6 +2,7 @@ import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZContext;
 
+import java.util.Random;
 import java.util.StringTokenizer;
 
 public class Monitor {
@@ -58,10 +59,24 @@ public class Monitor {
      * @param args: La dirección (host + nro. de puerto) del proxy se pasa como primer argumento al momento de ejecutar el programa.
      *            Además, el tipo de sensor al que estará suscrito el Monitor se pasa como segundo argumento.
      *            Si no es así, se toma como dirección por defecto: localhost + puerto 5557;
-     *            y como tipo de medición, pH.
+     *            y como tipo de medición, un tipo de medición seleccionado aleatoriamente.
      */
     public static void main(String[] args){
-        zmqSubscribe("tcp://localhost:5557", tipoMedicion.PH.tipo);
+
+        String address;
+        String tipoMedicion;
+
+        if (args.length == 0) {
+            System.out.println("No se ha ingresado ningún parametro en la línea de comandos.\nSe generará un Monitor aleatorio.");
+            Random rd = new Random();
+            address = "tcp://localhost:5557";
+            tipoMedicion = TipoMedicion.retrieveStringByType(TipoMedicion.values()[rd.nextInt(3)]);
+        } else {
+            address = args[0];
+            tipoMedicion = args[1];
+        }
+
+        zmqSubscribe(address, tipoMedicion);
     }
 
 }
