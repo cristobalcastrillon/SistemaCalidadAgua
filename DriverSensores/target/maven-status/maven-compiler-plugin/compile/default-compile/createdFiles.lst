@@ -1,0 +1,6 @@
+sensores\ConfigFile.class
+sensores\Sensor.class
+driver\DriverSensores.class
+sensores\ProbabilityFreqArrayCountDownFinished.class
+sensores\TipoSensor$1.class
+sensores\TipoSensor.class

@@ -85,7 +85,7 @@ public class Monitor {
     public static void main(String[] args){
 
         String subAddress;
-        String clientAddress = "tcp://localhost:5558";
+        String clientAddress;
         String tipoMedicion;
 
         if (args.length == 0) {
@@ -96,8 +96,8 @@ public class Monitor {
             tipoMedicion = TipoMedicion.retrieveStringByType(TipoMedicion.values()[rd.nextInt(3)]);
         } else {
             subAddress = args[0];
-            //clientAddress = args[1];
-            tipoMedicion = args[1];
+            clientAddress = args[1];
+            tipoMedicion = args[2];
         }
 
         zmqHandle(subAddress, clientAddress, tipoMedicion);

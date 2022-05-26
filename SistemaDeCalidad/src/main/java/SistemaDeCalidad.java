@@ -71,6 +71,7 @@ public class SistemaDeCalidad {
         ZMQ.Socket buffer = ctx.socket(SocketType.REP);
         // TODO: OJO con las direcciones de cada máquina
         buffer.bind("tcp://*:5558");
+        System.out.println("Antes de while");
         while (!Thread.currentThread().isInterrupted()) {
             // Esperamos alguna alerta del Monitor...
             String alerta = buffer.recvStr(0);

@@ -1,6 +1,6 @@
 package sensores;
 
-import com.sun.tools.javac.util.Pair;
+
 import driver.DriverSensores;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
@@ -98,13 +98,13 @@ public class Sensor extends Thread {
         while(!Thread.currentThread().isInterrupted()){
             try{
                 sleep(temporizador);
-                Pair<Double, Integer> generatedPair = null;
+                String generatedPair[] = {"",""};
                 Integer typeOfReadingIndex = null;
                 try{
                     do{
                         generatedPair = generateReading();
-                    } while(generatedProbabilityFreqArray[generatedPair.snd] <= 0);
-                    typeOfReadingIndex = generatedPair.snd;
+                    } while(generatedProbabilityFreqArray[Integer.parseInt(generatedPair[1])] <= 0);
+                    typeOfReadingIndex = Integer.parseInt(generatedPair[1]);
                     generatedProbabilityFreqArray[typeOfReadingIndex]--;
                     if(generatedProbabilityFreqArray[0] <= 0 && generatedProbabilityFreqArray[1] <= 0 && generatedProbabilityFreqArray[2] <= 0){
                         throw new ProbabilityFreqArrayCountDownFinished();
@@ -115,7 +115,7 @@ public class Sensor extends Thread {
                     generatedProbabilityFreqArray = generateProbabilityFreqArray();
                 }
 
-                readingData = generatedPair.fst;
+                readingData = Double.parseDouble(generatedPair[0]);
 
                 //TODO: Comment the following DEBUG line
                 System.out.println(this.tipoSensor.toString() + '\t' + this.idSensor + '\t' + readingData);
@@ -145,7 +145,7 @@ public class Sensor extends Thread {
         return resultingArray;
     }
 
-    public Pair<Double, Integer> generateReading() {
+    public String[] generateReading() {
 
         Integer indexOfProbabilityCounter = null;
         Random rd = new Random();
@@ -165,6 +165,6 @@ public class Sensor extends Thread {
             indexOfProbabilityCounter = 2;
         }
 
-        return Pair.of(generatedValue, indexOfProbabilityCounter);
+        return new String[]{generatedValue.toString(), indexOfProbabilityCounter.toString()};
     }
 }
