@@ -1,4 +1,6 @@
 import org.apache.commons.codec.digest.DigestUtils;
+import org.zeromq.SocketType;
+import org.zeromq.ZMQ;
 
 import java.io.*;
 import java.security.SecureRandom;
@@ -63,8 +65,20 @@ public class SistemaDeCalidad {
             }
         }
 
-        // TODO: Receive data in loop
+        ZMQ.Context ctx = ZMQ.context(1);
 
+        // Socket para recibir mensajes (alertas) de los clientes (Monitores)
+        ZMQ.Socket buffer = ctx.socket(SocketType.REP);
+        // TODO: OJO con las direcciones de cada máquina
+        buffer.bind("tcp://*:5558");
+        while (!Thread.currentThread().isInterrupted()) {
+            // Esperamos alguna alerta del Monitor...
+            String alerta = buffer.recvStr(0);
+            // Imprimiendo en consola para el usuario...
+            System.out.println(alerta);
+
+            buffer.send("Recibido");
+        }
     }
 
     public static void userSignUp(String id, String plainTextPassword){
